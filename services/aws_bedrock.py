@@ -2,10 +2,10 @@ import boto3
 import json
 import requests
 
-boto3.setup_default_session(profile_name="quintodev")
+# boto3.setup_default_session(profile_name="quintodev")
 bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
 
-MS_USERS_URL = "http://localhost:8080"
+MS_USERS_URL = "http://localhost:8081"
 
 def extraer_ciudad_y_especialidad(pregunta: str):
     body = {
@@ -38,12 +38,17 @@ def extraer_ciudad_y_especialidad(pregunta: str):
     except:
         return "", ""
 
-def obtener_profesionales(especialidad: str, ciudad: str):
+def obtener_profesionales(especialidad: str, ciudad: str, token: str) -> list:
     try:
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
         response = requests.get(
-            f"{MS_USERS_URL}/users",
+            f"{MS_USERS_URL}/searches",
             params={"especialidad": especialidad, "ciudad": ciudad},
-            timeout=5
+            timeout=5,
+            headers=headers
         )
         response.raise_for_status()
         return response.json()
@@ -54,23 +59,35 @@ def obtener_profesionales(especialidad: str, ciudad: str):
 def generar_contexto(profesionales: list) -> str:
     if not profesionales:
         return "Actualmente no hay profesionales disponibles para esta búsqueda."
+    
     return "\n".join([
-        f"- {p['nombre']} ({p['especialidad']}, {p['ciudad']})"
+        f"- {p['nombre']} {p['apellido']} ({p['especialidad']} en {p['ciudad']}). Disponibilidad: {', '.join(p.get('disponibilidad', []))}. [ID: {p['id']}]"
         for p in profesionales
     ])
 
-def consultar_gpt_dinamico(pregunta: str, usuario: str) -> str:
+def consultar_gpt_dinamico(pregunta: str, usuario: str, token: str) -> str:
     ciudad, especialidad = extraer_ciudad_y_especialidad(pregunta)
-    profesionales = obtener_profesionales(especialidad, ciudad)
+    profesionales = obtener_profesionales(especialidad, ciudad, token)
     contexto = generar_contexto(profesionales)
 
     system_text = f"""
-    Eres CareAssistant, un asistente de salud. El usuario se llama {usuario}.
-    Ciudad detectada: {ciudad or 'No detectada'}, Especialidad detectada: {especialidad or 'No detectada'}.
-    Solo responde con base en los profesionales disponibles.
+    Eres es CareAssistant, un asistente de salud digital confiable y respetuoso.
+    Tu función es ayudar a los usuarios registrados a encontrar profesionales de salud disponibles, utilizando exclusivamente la información interna del sistema.
 
-    Profesionales disponibles:
+    Datos detectados:
+    - Usuario: {usuario}
+    - Ciudad: {ciudad or 'No detectada'}
+    - Especialidad: {especialidad or 'No detectada'}
+
+    Lista de profesionales disponibles:
     {contexto}
+
+    Instrucciones:
+    
+    - Al finalizar, si el usuario desea agendar una cita o servicio con alguno de estos profesionales, invítalo a continuar el proceso directamente desde nuestra plataforma.
+    - No debes proporcionar información médica, diagnósticos o tratamientos. Tu función es ayudar a los usuarios a encontrar profesionales de salud.
+    - No inventes datos. Si no hay profesionales disponibles, indica que no se encontraron resultados en este momento.
+    - No debes recomendar llamadas externas, recomendaciones de otros sistemas, redes sociales, paginas web, pasos o acciones fuera de la plataforma CareAssistant.
     """
 
     body = {

@@ -4,3 +4,5 @@
 /pyvenv.cfg
 /.vscode
 /.idea
+__pycache__
+*.pyc
