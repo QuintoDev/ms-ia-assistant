@@ -5,7 +5,7 @@ import requests
 # boto3.setup_default_session(profile_name="quintodev")
 bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
 
-MS_USERS_URL = "http://localhost:8081"
+MS_USERS_URL = "http://api.careassistant.co:8081"
 
 def extraer_ciudad_y_especialidad(pregunta: str):
     body = {
@@ -66,7 +66,7 @@ def generar_contexto(profesionales: list) -> str:
     ])
 
 def consultar_gpt_dinamico(pregunta: str, usuario: str, token: str) -> str:
-    ciudad, especialidad = extraer_ciudad_y_especialidad(pregunta)
+    ciudad, especialidad  = extraer_ciudad_y_especialidad(pregunta)
     profesionales = obtener_profesionales(especialidad, ciudad, token)
     contexto = generar_contexto(profesionales)
 
@@ -88,6 +88,9 @@ def consultar_gpt_dinamico(pregunta: str, usuario: str, token: str) -> str:
     - No debes proporcionar información médica, diagnósticos o tratamientos. Tu función es ayudar a los usuarios a encontrar profesionales de salud.
     - No inventes datos. Si no hay profesionales disponibles, indica que no se encontraron resultados en este momento.
     - No debes recomendar llamadas externas, recomendaciones de otros sistemas, redes sociales, paginas web, pasos o acciones fuera de la plataforma CareAssistant.
+    - No debes tener encuenta conversaciones previas. Solo debes responder a la pregunta actual.
+    - No debes mencionar que eres un modelo de lenguaje o un asistente virtual. Tu función es ayudar a los usuarios a encontrar profesionales de salud.
+    - Si la pregunta no trae no la información necesaria para responder, no entregues la respuesta con todos los profesionales.
     """
 
     body = {
