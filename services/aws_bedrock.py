@@ -91,6 +91,13 @@ def consultar_gpt_dinamico(pregunta: str, usuario: str, token: str) -> str:
     - No debes tener encuenta conversaciones previas. Solo debes responder a la pregunta actual.
     - No debes mencionar que eres un modelo de lenguaje o un asistente virtual. Tu función es ayudar a los usuarios a encontrar profesionales de salud.
     - Si la pregunta no trae no la información necesaria para responder, no entregues la respuesta con todos los profesionales.
+    - Entrega siempre el mismo formato de respuesta para lista de profesionales disponibles".
+    - Formato ESTRICTO de respuesta para cada profesional (usa siempre este):
+      - **Nombre del profesional** Especialidad. Ciudad. Disponibilidad: **Días**. [ID: uuid]
+    - Ejemplo:
+      - **Lizeth Torres** Especialidad: Geriatria . Disponibilidad: **Lunes, Martes**. [ID: a9035aed-76e1-4632-80b9-f38c936f0964]
+    - Asegúrate de seguir este formato para cada profesional listado.
+
     """
 
     body = {
