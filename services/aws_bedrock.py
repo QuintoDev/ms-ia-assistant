@@ -3,7 +3,7 @@ import boto3
 import json
 import requests
 
-MS_USERS_URL = os.getenv("MS_USERS_URL", "http://localhost:8081")
+MS_ORCHESTRATOR_SERVICE = os.getenv("MS_ORCHESTRATOR_SERVICE", "http://localhost:8080")
 REGION_NAME = os.getenv("REGION_NAME", "us-east-1")
 MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "amazon.nova-micro-v1:0")
 
@@ -47,7 +47,7 @@ def obtener_profesionales(especialidad: str, ciudad: str, token: str) -> list:
             "Content-Type": "application/json"
         }
         response = requests.get(
-            f"{MS_USERS_URL}/searches",
+            f"{MS_ORCHESTRATOR_SERVICE}/searches",
             params={"especialidad": especialidad, "ciudad": ciudad},
             timeout=5,
             headers=headers
