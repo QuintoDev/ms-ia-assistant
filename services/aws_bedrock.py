@@ -1,11 +1,13 @@
+import os
 import boto3
 import json
 import requests
 
-# boto3.setup_default_session(profile_name="quintodev")
-bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
+MS_USERS_URL = os.getenv("MS_USERS_URL", "http://localhost:8081")
+REGION_NAME = os.getenv("REGION_NAME", "us-east-1")
+MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "amazon.nova-micro-v1:0")
 
-MS_USERS_URL = "http://api.careassistant.co:8081"
+bedrock = boto3.client("bedrock-runtime", region_name=REGION_NAME)
 
 def extraer_ciudad_y_especialidad(pregunta: str):
     body = {
@@ -23,7 +25,7 @@ def extraer_ciudad_y_especialidad(pregunta: str):
     }
 
     response = bedrock.invoke_model(
-        modelId="amazon.nova-micro-v1:0",
+        modelId=MODEL_ID,
         contentType="application/json",
         accept="application/json",
         body=json.dumps(body)
