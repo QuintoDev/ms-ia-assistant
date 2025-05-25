@@ -18,6 +18,10 @@ class ConsultaIA(BaseModel):
     pregunta: str
     usuario: str
 
+@app.get("/")
+def root():
+    return {"status": "UP"}
+
 @app.post("/conversations")
 def consultar_ia(data: ConsultaIA, authorization: str = Header(...)):
     try:
