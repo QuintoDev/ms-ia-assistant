@@ -34,7 +34,7 @@ jobs:
       - name: Download artifact from Python CI with uvicorn workflow
         uses: dawidd6/action-download-artifact@v2
         with:
-          name: ms-ia-assistant-0.0.1
+          name: ms-ia-assistant-image
           workflow_conclusion: success
           workflow: compile-image.yml
           run_id: ${{ steps.get_run.outputs.run_id }}
