@@ -30,6 +30,20 @@ jobs:
           echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ github.token }}
+      
+      - name: List all recent runs and artifacts
+        run: |
+          echo "🔎 List recent workflow runs:"
+          gh run list --repo QuintoDev/ms-ia-assistant --limit 5
+
+          echo "🔎 List artifacts of last run:"
+          run_id=$(gh run list --repo QuintoDev/ms-ia-assistant --workflow="Python CI with uvicorn" --branch=main --event=push --json databaseId,conclusion --jq '[.[] | select(.conclusion == "success")][0].databaseId')
+          echo "Using run_id: $run_id"
+          gh run view $run_id --repo QuintoDev/ms-ia-assistant --log
+          gh run download $run_id --repo QuintoDev/ms-ia-assistant --name ms-ia-assistant-image --dir ./debug-artifacts || echo "Artifact not found"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
 
       - name: Download artifact from Python CI with uvicorn workflow
         uses: dawidd6/action-download-artifact@v2
