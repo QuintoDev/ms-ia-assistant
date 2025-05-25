@@ -31,6 +31,6 @@ jobs:
       - name: Upload image as Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ms-ia-assistant-0.0.1.jar
-          path: target/ms-ia-assistant-0.0.1.jar
+          name: ms-ia-assistant-0.0.1
+          path: target/ms-ia-assistant-0.0.1
           retention-days: 1
