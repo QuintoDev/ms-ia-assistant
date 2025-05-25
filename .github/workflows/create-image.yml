@@ -1,0 +1,40 @@
+name: Python CI with uvicorn
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build Docker Image
+
+    runs-on: ubuntu-latest
+    environment: mvp
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Authenticate Docker to Amazon ECR Public
+        run: |
+          aws ecr-public get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin public.ecr.aws/${{ secrets.ECR_PUBLIC_ID }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t ms-ia-assistant:0.0.1 .
+
+      - name: Save image to .tar
+        run: |
+          docker save ms-ia-assistant:0.0.1 -o ms-ia-assistant.tar
+
+      - name: Upload image as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ms-ia-assistant-image
+          path: ms-ia-assistant.tar
+          retention-days: 1

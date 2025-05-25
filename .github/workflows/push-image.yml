@@ -1,0 +1,53 @@
+name: CD to AWS ECR
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Push Docker Image
+
+    runs-on: ubuntu-latest
+    environment: mvp
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Authenticate Docker to Amazon ECR Public
+        run: |
+          aws ecr-public get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin public.ecr.aws/${{ secrets.ECR_PUBLIC_ID }}
+
+      - name: Get last successful Python CI with uvicorn run_id
+        id: get_run
+        run: |
+          run_id=$(gh run list --repo QuintoDev/ms-ia-assistant --workflow="Python CI with uvicorn" --branch=main --event=push --json databaseId,conclusion --jq '[.[] | select(.conclusion == "success")][0].databaseId')
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Download artifact from Python CI with uvicorn workflow
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          name: ms-ia-assistant-0.0.1
+          workflow_conclusion: success
+          workflow: compile-image.yml
+          run_id: ${{ steps.get_run.outputs.run_id }}
+          github_token: ${{ github.token }}
+
+      - name: Load Docker image from tar
+        run: |
+          docker load -i ms-ia-assistant.tar
+
+      - name: Tag Docker image
+        run: |
+          docker tag ms-ia-assistant:0.0.1 public.ecr.aws/${{ secrets.ECR_PUBLIC_ID }}/ms-ia-assistant:latest
+
+      - name: Push Docker image to Amazon ECR Public
+        run: |
+          docker push public.ecr.aws/${{ secrets.ECR_PUBLIC_ID }}/ms-ia-assistant:latest
