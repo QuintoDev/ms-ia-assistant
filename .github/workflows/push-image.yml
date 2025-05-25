@@ -40,6 +40,10 @@ jobs:
           run_id: ${{ steps.get_run.outputs.run_id }}
           github_token: ${{ github.token }}
 
+      - name: Load Docker image from tar
+        run: |
+          docker load -i ms-ia-assistant.tar
+
       - name: Tag Docker image
         run: |
           docker tag ms-ia-assistant:0.0.1 public.ecr.aws/${{ secrets.ECR_PUBLIC_ID }}/ms-ia-assistant:latest
