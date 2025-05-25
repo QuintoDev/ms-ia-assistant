@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    name: Build Docker Image
+    name: Build Docker build and push
 
     runs-on: ubuntu-latest
     environment: mvp
@@ -29,13 +29,10 @@ jobs:
         run: |
           docker build -t ms-ia-assistant:0.0.1 .
 
-      - name: Save image to .tar
+      - name: Tag Docker image
         run: |
-          docker save ms-ia-assistant:0.0.1 -o ms-ia-assistant.tar
+          docker tag ms-ia-assistant:0.0.1 public.ecr.aws/${{ secrets.ECR_PUBLIC_ID }}/ms-ia-assistant:latest
 
-      - name: Upload image as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ms-ia-assistant-image
-          path: ms-ia-assistant.tar
-          retention-days: 1
+      - name: Push Docker image to Amazon ECR Public
+        run: |
+          docker push public.ecr.aws/${{ secrets.ECR_PUBLIC_ID }}/ms-ia-assistant:latest
