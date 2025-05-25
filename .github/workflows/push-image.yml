@@ -36,7 +36,7 @@ jobs:
         with:
           name: ms-ia-assistant-image
           workflow_conclusion: success
-          workflow: compile-image.yml
+          workflow: Python CI with uvicorn
           run_id: ${{ steps.get_run.outputs.run_id }}
           github_token: ${{ github.token }}
 
