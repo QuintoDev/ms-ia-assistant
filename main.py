@@ -32,6 +32,7 @@ def consultar_ia(data: ConsultaIA, authorization: str = Header(...)):
             token=token
         )
         print("pregunta:", data.pregunta)
+        print("respuesta:", respuesta)
         return {"respuesta": respuesta}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
