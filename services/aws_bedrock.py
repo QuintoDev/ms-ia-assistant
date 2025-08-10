@@ -12,7 +12,7 @@ bedrock = boto3.client("bedrock-runtime", region_name=REGION_NAME)
 def extraer_ciudad_y_especialidad(pregunta: str):
     body = {
         "system": [{
-            "text": "Eres un asistente que extrae información de preguntas sobre salud. Extrae ciudad y especialidad médica mencionadas. Solo responde con un JSON así: {\"ciudad\": \"bogota\", \"especialidad\": \"geriatria\"}."
+            "text": "Eres un asistente que ayuda a los usuarios a agendar: Consultas medicas, Examenes de SIBO (Small Intestinal Bacterial Overgrowth) y Endoscopias digestivas: la Videoendoscopia Digestiva Alta (VEDA) y la Videocolonoscopia (VCC"
         }],
         "messages": [{
             "role": "user",
@@ -40,24 +40,6 @@ def extraer_ciudad_y_especialidad(pregunta: str):
     except:
         return "", ""
 
-def obtener_profesionales(especialidad: str, ciudad: str, token: str) -> list:
-    try:
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
-        }
-        response = requests.get(
-            f"{MS_ORCHESTRATOR_SERVICE}/searches",
-            params={"especialidad": especialidad, "ciudad": ciudad},
-            timeout=5,
-            headers=headers
-        )
-        response.raise_for_status()
-        return response.json()
-    except Exception as e:
-        print("Error al obtener profesionales:", e)
-        return []
-
 def generar_contexto(profesionales: list) -> str:
     if not profesionales:
         return "Actualmente no hay profesionales disponibles para esta búsqueda."
@@ -67,10 +49,7 @@ def generar_contexto(profesionales: list) -> str:
         for p in profesionales
     ])
 
-def consultar_gpt_dinamico(pregunta: str, usuario: str, token: str) -> str:
-    ciudad, especialidad  = extraer_ciudad_y_especialidad(pregunta)
-    profesionales = obtener_profesionales(especialidad, ciudad, token)
-    contexto = generar_contexto(profesionales)
+def consultar_gpt_dinamico(pregunta: str) -> str:
 
     system_text = f"""
     Eres CareAssistant, un asistente de salud digital confiable y respetuoso.
@@ -80,9 +59,6 @@ def consultar_gpt_dinamico(pregunta: str, usuario: str, token: str) -> str:
     - Usuario: {usuario}
     - Ciudad: {ciudad or 'No detectada'}
     - Especialidad: {especialidad or 'No detectada'}
-
-    Lista de profesionales disponibles:
-    {contexto}
 
     Instrucciones:
     
