@@ -96,6 +96,7 @@ def build_user_prompt(a: Ask) -> str:
         "sede": "Muestra la lista de sedes proporcionada y pide elegir por ID o nombre.",
         "datetime": "Muestra el menú de horarios proporcionado y pide elegir (1..N o A..).",
         "done": "Muestra un resumen de todo y pide confirmación (sí/no).",
+        "timeout": "La sesión se cerró por inactividad. Despídete cordialmente y explica cómo retomar: escribir 'hola' o reenviar su DNI para empezar de nuevo. No pidas más datos.",
     }.get(a.step, "Guía al siguiente paso brevemente.")
 
     return (
@@ -144,6 +145,14 @@ def reply(a: Ask):
     except Exception as e:
         # Fallback mínimo si Bedrock falla
         # Para servicios_info, usa el contexto real si lo hay
+        if a.step == "timeout":
+            nombre = ""
+            try:
+                nombre = (a.slots or {}).get("nombre_apellido") or ""
+            except:
+                pass
+            base = f"Hola{(' ' + nombre) if nombre else ''}. "
+            return {"text": base + "Cerré tu sesión por inactividad. Para continuar, escribe “hola” o envía tu DNI para empezar de nuevo."}
         if a.step == "servicios_info" and isinstance(a.context, dict) and a.context.get("servicios"):
             svcs = a.context["servicios"]
             return {"text": "Servicios disponibles:\n" + "\n".join(f"- {s}" for s in svcs)}
